@@ -1,4 +1,4 @@
-#STYLE TRANSFER
+# STYLE TRANSFER
 
 An implementation of style transfer based on Stanford CS231n's Spring 2020 assignment #3 (https://cs231n.github.io/assignments2020/assignment3/).
 I filled in the loss functions and reproduced style transfer locally to increase my understanding of it, and of PyTorch.
