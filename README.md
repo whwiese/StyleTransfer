@@ -13,3 +13,5 @@ gives us a measure of "style loss". The content loss is a measure of the differe
 image are passed into the CNN. We also use a "TV loss" to encourage smoothness in the image by penalizing variations between nearby pixels. The summation
 of these 3 losses produces a quanity we can optimize the image over (through backprop into the image features) to produce an image that captures 
 the syle of the style image and the content of the content image.
+
+<img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="drawing" width="400"/> <img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="drawing" width="400"/>
