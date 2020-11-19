@@ -14,4 +14,8 @@ image are passed into the CNN. We also use a "TV loss" to encourage smoothness i
 of these 3 losses produces a quanity we can optimize the image over (through backprop into the image features) to produce an image that captures 
 the syle of the style image and the content of the content image.
 
-<img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="drawing" width="400"/> <img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="drawing" width="400"/>
+#### Input Images
+<img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="nightwatch" width="400"/> <img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/composition_vii.jpg" alt="comp" width="400"/>
+
+#### Generated Image
+<img src="https://github.com/whwiese/StyleTransfer/blob/master/GeneratedImages/generated.jpg" alt="gen" width="400"/>
