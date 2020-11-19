@@ -11,9 +11,101 @@ SQUEEZENET_STD = [0.229, 0.224, 0.225]
 
 dtype = torch.FloatTensor
 
+#Style, content loss functions and helpers
+def content_loss(content_weight, content_current, content_original):
+    """
+    Compute the content loss for style transfer.
+
+    Inputs:
+    - content_weight: Scalar giving the weighting for the content loss.
+    - content_current: features of the current image; this is a PyTorch Tensor of shape
+      (1, C_l, H_l, W_l).
+    - content_target: features of the content image, Tensor with shape (1, C_l, H_l, W_l).
+
+    Returns:
+    - scalar content loss
+    """
+    content_loss = content_weight*torch.sum((content_original-content_current)**2)
+    
+    return content_loss
+
+def style_loss(feats, style_layers, style_targets, style_weights):
+    """
+    Computes the style loss at a set of layers.
+
+    Inputs:
+    - feats: list of the features at every layer of the current image, as produced by
+      the extract_features function.
+    - style_layers: List of layer indices into feats giving the layers to include in the
+      style loss.
+    - style_targets: List of the same length as style_layers, where style_targets[i] is
+      a PyTorch Tensor giving the Gram matrix of the source style image computed at
+      layer style_layers[i].
+    - style_weights: List of the same length as style_layers, where style_weights[i]
+      is a scalar giving the weight for the style loss at layer style_layers[i].
+
+    Returns:
+    - style_loss: A PyTorch Tensor holding a scalar giving the style loss.
+    """
+    style_loss = 0.0
+    
+    for i,layer in enumerate(style_layers):
+        G = gram_matrix(feats[layer])
+        style_loss += style_weights[i]*torch.sum((G-style_targets[i])**2)
+
+    return style_loss
+
+def tv_loss(img, tv_weight):
+    """
+    Compute total variation loss.
+
+    Inputs:
+    - img: PyTorch Variable of shape (1, 3, H, W) holding an input image.
+    - tv_weight: Scalar giving the weight w_t to use for the TV loss.
+
+    Returns:
+    - loss: PyTorch Variable holding a scalar giving the total variation loss
+      for img weighted by tv_weight.
+    """
+    horizontal_shift_1 = img[:,:,:,1:]
+    horizontal_shift_2 = img[:,:,:,:-1]
+    
+    vertical_shift_1 = img[:,:,1:,:]
+    vertical_shift_2 = img[:,:,:-1,:]
+    
+    tv_loss = tv_weight*(torch.sum((horizontal_shift_1-horizontal_shift_2)**2)+torch.sum((vertical_shift_1-vertical_shift_2)**2))
+    
+    return tv_loss
+
+def gram_matrix(features, normalize=True):
+    """
+    Compute the Gram matrix from features.
+
+    Inputs:
+    - features: PyTorch Tensor of shape (N, C, H, W) giving features for
+      a batch of N images.
+    - normalize: optional, whether to normalize the Gram matrix
+        If True, divide the Gram matrix by the number of neurons (H * W * C)
+
+    Returns:
+    - gram: PyTorch Tensor of shape (N, C, C) giving the
+      (optionally normalized) Gram matrices for the N input images.
+    """
+
+    N,C,H,W = features.shape
+    
+    gram_features = torch.reshape(features,(N,C,-1))
+    
+    gram = torch.matmul(gram_features,gram_features.permute(0,2,1))
+    
+    if normalize == True:
+        gram /= (H*W*C)
+    
+    return gram
+
 ###################################################################################################################
 # Methods below copied from Stanford CS231n's assignment #3 https://cs231n.github.io/assignments2020/assignment3/ #
-#
+# For converting jpg images to pytorch tensors and back
 ###################################################################################################################
 
 def preprocess(img, size=512):
@@ -30,8 +122,8 @@ def preprocess(img, size=512):
     transform = T.Compose([
         T.Resize(size),
         T.ToTensor(),
-        T.Normalize(mean=SQUEEZENET_MEAN.tolist(),
-                    std=SQUEEZENET_STD.tolist()),
+        T.Normalize(mean=SQUEEZENET_MEAN,
+                    std=SQUEEZENET_STD),
         T.Lambda(lambda x: x[None]),
     ])
     return transform(img)
@@ -54,8 +146,8 @@ def deprocess(img):
     """
     transform = T.Compose([
         T.Lambda(lambda x: x[0]),
-        T.Normalize(mean=[0, 0, 0], std=[1.0 / s for s in SQUEEZENET_STD.tolist()]),
-        T.Normalize(mean=[-m for m in SQUEEZENET_MEAN.tolist()], std=[1, 1, 1]),
+        T.Normalize(mean=[0, 0, 0], std=[1.0 / s for s in SQUEEZENET_STD]),
+        T.Normalize(mean=[-m for m in SQUEEZENET_MEAN], std=[1, 1, 1]),
         T.Lambda(rescale),
         T.ToPILImage(),
     ])
@@ -71,8 +163,7 @@ def rescale(x):
     x_rescaled = (x - low) / (high - low)
     return x_rescaled
 
-# We provide this helper code which takes an image, a model (cnn), and returns a list of
-# feature maps, one per layer.
+#returns a list of feature values at each leayer of the model, cnn, when given an input x
 def extract_features(x, cnn):
     """
     Use the CNN to extract features from the input image x.
@@ -84,9 +175,7 @@ def extract_features(x, cnn):
 
     Returns:
     - features: A list of feature for the input images x extracted using the cnn model.
-      features[i] is a PyTorch Tensor of shape (N, C_i, H_i, W_i); recall that features
-      from different layers of the network may have different numbers of channels (C_i) and
-      spatial dimensions (H_i, W_i).
+      features[i] is a PyTorch Tensor of shape (N, C_i, H_i, W_i);
     """
     features = []
     prev_feat = x
@@ -96,7 +185,7 @@ def extract_features(x, cnn):
         prev_feat = next_feat
     return features
 
-#please disregard warnings about initialization
+#get image and CNN features from input image
 def features_from_img(imgpath, imgsize, cnn):
     img = preprocess(PIL.Image.open(imgpath), size=imgsize)
     img_var = img.type(dtype)
