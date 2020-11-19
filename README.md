@@ -15,7 +15,7 @@ of these 3 losses produces a quanity we can optimize the image over (through bac
 the syle of the style image and the content of the content image.
 
 #### Input Images
-<img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/nightwatch.jpg" alt="nightwatch" width="300"/> <img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/starry_night.jpg" alt="comp" width="300"/>
+<img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/chinchilla.jpg" alt="chinchilla" width="300"/> <img src="https://github.com/whwiese/StyleTransfer/blob/master/Styles/muse.jpg" alt="muse" width="300"/>
 
 #### Generated Image
 <img src="https://github.com/whwiese/StyleTransfer/blob/master/GeneratedImages/generated.jpg" alt="gen" width="300"/>
